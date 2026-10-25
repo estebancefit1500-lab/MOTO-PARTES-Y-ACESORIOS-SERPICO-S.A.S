@@ -146,16 +146,43 @@ Recomendaciones:
 
 ---
 
-## 7. Mantener Supabase activo (opcional)
+## 7. Mantenimiento automático cada 3 días (ya incluido)
 
-El plan gratuito pausa el proyecto tras ~7 días sin uso. Ya existe el workflow
-`.github/workflows/keep-alive.yml`, que hace un ping cada 3 días.
+GitHub y Supabase tienen dos "castigos" por inactividad:
+
+| Servicio | Qué pasa si no hay actividad |
+|---|---|
+| **Supabase** (plan gratis) | El proyecto se **pausa** tras ~7 días sin uso. |
+| **GitHub Actions** | Los workflows programados se **desactivan** tras 60 días sin actividad en el repositorio. |
+
+El archivo `.github/workflows/keep-alive.yml` ya resuelve las dos cosas. Cada 3 días
+(a las 12:00 UTC / 7:00 a. m. Colombia) hace automáticamente:
+
+1. **Consulta Supabase** → tablas `banners` y `products` (mantiene la base despierta).
+2. **Consulta la página publicada** → verifica que GitHub Pages responda.
+3. **Registra un latido** → hace un commit de `.keepalive`, lo que cuenta como
+   actividad del repositorio (evita que GitHub desactive el workflow) y además
+   reconstruye el sitio.
+
+### Configurarlo (una sola vez, 1 minuto)
 
 1. GitHub → repositorio → **Settings** → **Secrets and variables** → **Actions**.
 2. **New repository secret**, dos veces:
    - `SUPABASE_URL` → `https://abcdefgh.supabase.co`
    - `SUPABASE_ANON_KEY` → tu clave anon
-3. Ve a la pestaña **Actions** → *Supabase Keep-Alive* → **Run workflow** para probar.
+3. Pestaña **Actions** → *🔄 Keep-Alive (Supabase + GitHub Pages)* → **Run workflow**
+   para probarlo de inmediato.
+
+> Si aún no pones los secrets, el workflow igual corre y mantiene el latido:
+> simplemente omite el ping a Supabase.
+
+En el panel admin, pestaña **Banner**, verás la tarjeta
+**“Mantenimiento automático activo”** con el enlace al historial de revisiones.
+
+> ¿Por qué no se hace desde la página web? Porque el navegador solo ejecuta código
+> cuando alguien tiene la página abierta. Un temporizador en JavaScript se detiene al
+> cerrar la pestaña, así que no serviría para evitar pausas de 7 o 60 días. Por eso
+> corre en GitHub Actions, que sí funciona 24/7 en los servidores de GitHub.
 
 ---
 

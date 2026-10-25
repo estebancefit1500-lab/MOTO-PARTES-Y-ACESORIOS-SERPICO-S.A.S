@@ -1,97 +1,119 @@
 # ============================================================
 # .github/workflows/keep-alive.yml
-# Supabase Keep-Alive — Moto Partes Serpico S.A.S
+# Mantenimiento automático — Moto Partes Serpico S.A.S
 #
-# Ejecuta un ping a la base de datos Supabase cada 3 días
-# para evitar que el proyecto entre en pausa por inactividad.
+# Cada 3 días este workflow:
+#   1. Consulta Supabase (tablas banners y products) → evita que el
+#      proyecto gratuito entre en pausa por inactividad.
+#   2. Consulta la página publicada en GitHub Pages → verifica que
+#      el despliegue siga en línea.
+#   3. Registra un "latido" (commit de .keepalive) → GitHub desactiva
+#      los workflows programados tras 60 días sin actividad en el
+#      repositorio; este commit mantiene todo activo y además fuerza
+#      una reconstrucción del sitio.
 #
-# SETUP:
-#   1. Ve a tu repositorio en GitHub
-#   2. Settings → Secrets and variables → Actions → New repository secret
-#   3. Agrega los siguientes secrets:
-#      - SUPABASE_URL      → https://TU_PROYECTO.supabase.co
-#      - SUPABASE_ANON_KEY → tu anon/public key de Supabase
+# SETUP (una sola vez):
+#   GitHub → repositorio → Settings → Secrets and variables → Actions
+#     - SUPABASE_URL      = https://TU_PROYECTO.supabase.co
+#     - SUPABASE_ANON_KEY = tu clave anon/public
+#
+# Sin esos secrets el workflow igual funciona: omite el ping a Supabase
+# y mantiene el latido del repositorio.
 # ============================================================
 
-name: 🏍️ Supabase Keep-Alive
+name: 🔄 Keep-Alive (Supabase + GitHub Pages)
 
 on:
   schedule:
-    # Cada 3 días a las 12:00 UTC (7:00 AM hora Colombia)
-    # Cron: minuto hora día-mes mes día-semana
+    # Cada 3 días a las 12:00 UTC (7:00 a. m. en Colombia)
     - cron: '0 12 */3 * *'
 
-  # También permite ejecutarlo manualmente desde la UI de GitHub
+  # Permite ejecutarlo a mano desde la pestaña Actions
   workflow_dispatch:
     inputs:
       reason:
-        description: 'Razón del ping manual'
+        description: 'Motivo del ping manual'
         required: false
-        default: 'Verificación manual del keep-alive'
+        default: 'Verificación manual'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+env:
+  PAGES_URL: https://estebancefit1500-lab.github.io/MOTO-PARTES-Y-ACESORIOS-SERPICO-S.A.S/
 
 jobs:
-  keep-alive-ping:
-    name: Ping Supabase Database
+  keep-alive:
+    name: Ping Supabase + Pages
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
-      - name: 📅 Log execution info
+      - name: 📥 Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: 📅 Información de la ejecución
         run: |
           echo "============================================"
-          echo "  Supabase Keep-Alive — Serpico Motos"
-          echo "  Fecha y hora: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "  Trigger: ${{ github.event_name }}"
+          echo "  Keep-Alive — Serpico Motos"
+          echo "  Fecha: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Disparador: ${{ github.event_name }}"
           echo "============================================"
 
-      - name: 🔍 Ping — Consulta a tabla banners
-        id: ping_banners
+      - name: 🗄️ Ping a Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Accept: application/json" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/banners?select=id&limit=1")
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::warning::Faltan los secrets SUPABASE_URL y/o SUPABASE_ANON_KEY. Se omite el ping a Supabase."
+            exit 0
+          fi
 
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
+          ok=0
+          for table in banners products; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+              -H "Accept: application/json" \
+              "$SUPABASE_URL/rest/v1/$table?select=id&limit=1")
+            echo "Tabla '$table' → HTTP $code"
+            if [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+              ok=$((ok+1))
+            fi
+          done
 
-          echo "HTTP Status: $HTTP_CODE"
-          echo "Response: $BODY"
-
-          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-            echo "✅ Ping exitoso a tabla 'banners' — Status $HTTP_CODE"
+          if [ "$ok" -eq 2 ]; then
+            echo "✅ Supabase está activo y respondiendo."
           else
-            echo "⚠️  Respuesta inesperada: $HTTP_CODE"
+            echo "::error::Supabase no respondió correctamente ($ok/2 tablas)."
             exit 1
           fi
 
-      - name: 🔍 Ping — Consulta a tabla products
-        id: ping_products
+      - name: 🌐 Ping a GitHub Pages
         run: |
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Accept: application/json" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/products?select=id&limit=1")
-
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
-
-          echo "HTTP Status: $HTTP_CODE"
-          echo "Response: $BODY"
-
-          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-            echo "✅ Ping exitoso a tabla 'products' — Status $HTTP_CODE"
+          code=$(curl -sL -o /dev/null -w "%{http_code}" "$PAGES_URL")
+          echo "Sitio publicado → HTTP $code"
+          if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then
+            echo "✅ GitHub Pages responde correctamente."
           else
-            echo "⚠️  Respuesta inesperada: $HTTP_CODE"
-            exit 1
+            echo "::warning::El sitio no respondió ($code). Si acabas de activar Pages, es normal."
           fi
 
-      - name: ✅ Keep-alive completado
+      - name: ❤️ Latido del repositorio
         run: |
-          echo "============================================"
-          echo "  ✅ Keep-alive ejecutado exitosamente"
-          echo "  La base de datos Supabase está activa."
-          echo "  Próxima ejecución automática en 3 días."
-          echo "============================================"
+          echo "Último latido: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .keepalive
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .keepalive
+          if git diff --cached --quiet; then
+            echo "Sin cambios que registrar."
+          else
+            git commit -m "chore(keep-alive): latido $(date -u '+%Y-%m-%d')"
+            git push
+            echo "✅ Latido registrado. Repositorio y despliegue activos."
+          fi

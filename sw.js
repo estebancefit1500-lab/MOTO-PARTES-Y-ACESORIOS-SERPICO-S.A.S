@@ -8,7 +8,7 @@
  *   - Stale-while-revalidate para páginas HTML
  */
 
-const CACHE_VERSION  = 'serpico-v3.7';
+const CACHE_VERSION  = 'serpico-v3.8';
 const STATIC_CACHE   = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE  = `${CACHE_VERSION}-dynamic`;
 
