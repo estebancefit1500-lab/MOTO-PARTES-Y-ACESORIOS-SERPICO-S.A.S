@@ -6,8 +6,8 @@
  *    → https://supabase.com → Tu proyecto → Settings → API
  */
 
-const SUPABASE_URL     = 'https://TU_PROYECTO.supabase.co';
-const SUPABASE_ANON_KEY = 'TU_ANON_PUBLIC_KEY_AQUI';
+const SUPABASE_URL     = 'https://vunoffzisepkyxfoobed.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_wCGXE0Ye4VRSW7L_rMQVeA_mVOsf4hn';
 
 /** Números de WhatsApp de la tienda (formato internacional, sin + ni espacios) */
 const WHATSAPP_NUMBERS = [
