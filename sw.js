@@ -8,7 +8,7 @@
  *   - Stale-while-revalidate para páginas HTML
  */
 
-const CACHE_VERSION  = 'serpico-v3.8';
+const CACHE_VERSION  = 'serpico-v3.9';
 const STATIC_CACHE   = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE  = `${CACHE_VERSION}-dynamic`;
 
@@ -74,6 +74,13 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('fonts.gstatic.com')
   ) {
     event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // config.js → Network-first: los cambios de claves de Supabase
+  // se aplican al instante, sin esperar a que cambie la caché.
+  if (url.pathname.endsWith('/js/config.js')) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
