@@ -1,0 +1,97 @@
+# ============================================================
+# .github/workflows/keep-alive.yml
+# Supabase Keep-Alive — Moto Partes Serpico S.A.S
+#
+# Ejecuta un ping a la base de datos Supabase cada 3 días
+# para evitar que el proyecto entre en pausa por inactividad.
+#
+# SETUP:
+#   1. Ve a tu repositorio en GitHub
+#   2. Settings → Secrets and variables → Actions → New repository secret
+#   3. Agrega los siguientes secrets:
+#      - SUPABASE_URL      → https://TU_PROYECTO.supabase.co
+#      - SUPABASE_ANON_KEY → tu anon/public key de Supabase
+# ============================================================
+
+name: 🏍️ Supabase Keep-Alive
+
+on:
+  schedule:
+    # Cada 3 días a las 12:00 UTC (7:00 AM hora Colombia)
+    # Cron: minuto hora día-mes mes día-semana
+    - cron: '0 12 */3 * *'
+
+  # También permite ejecutarlo manualmente desde la UI de GitHub
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Razón del ping manual'
+        required: false
+        default: 'Verificación manual del keep-alive'
+
+jobs:
+  keep-alive-ping:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📅 Log execution info
+        run: |
+          echo "============================================"
+          echo "  Supabase Keep-Alive — Serpico Motos"
+          echo "  Fecha y hora: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Trigger: ${{ github.event_name }}"
+          echo "============================================"
+
+      - name: 🔍 Ping — Consulta a tabla banners
+        id: ping_banners
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Accept: application/json" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/banners?select=id&limit=1")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Ping exitoso a tabla 'banners' — Status $HTTP_CODE"
+          else
+            echo "⚠️  Respuesta inesperada: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: 🔍 Ping — Consulta a tabla products
+        id: ping_products
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Accept: application/json" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/products?select=id&limit=1")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Ping exitoso a tabla 'products' — Status $HTTP_CODE"
+          else
+            echo "⚠️  Respuesta inesperada: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: ✅ Keep-alive completado
+        run: |
+          echo "============================================"
+          echo "  ✅ Keep-alive ejecutado exitosamente"
+          echo "  La base de datos Supabase está activa."
+          echo "  Próxima ejecución automática en 3 días."
+          echo "============================================"

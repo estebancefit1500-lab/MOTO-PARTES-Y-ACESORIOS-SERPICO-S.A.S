@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="icon" type="image/jpeg" href="assets/icons/icon-192.jpg" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.jpg" />
+
+  <title>Panel Admin — Moto Partes Serpico S.A.S</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+  <!-- ========== AUTH SCREEN ========== -->
+  <div id="auth-screen" role="main" aria-label="Inicio de sesión administrador">
+    <div class="auth-card">
+      <div class="auth-logo-wrap">
+        <img src="assets/logo.jpg" alt="Serpico Motos" class="auth-logo" />
+        <div class="auth-store-name">Serpico S.A.S</div>
+      </div>
+      <h1 class="auth-tagline">Panel Admin</h1>
+      <p class="auth-sub" style="margin-bottom: var(--sp-6);">Ingresa con tu cuenta de administrador</p>
+
+      <form class="auth-form" id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="login-email">Correo electrónico</label>
+          <input
+            type="email"
+            id="login-email"
+            class="form-input"
+            placeholder="admin@serpico.com"
+            required
+            autocomplete="email"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Contraseña</label>
+          <input
+            type="password"
+            id="login-password"
+            class="form-input"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+        <p class="form-error" id="login-error" style="display:none;">
+          ⚠️ <span id="login-error-msg">Credenciales incorrectas. Intenta de nuevo.</span>
+        </p>
+        <button type="submit" class="btn-primary" id="login-btn">
+          <span id="login-btn-text">Iniciar Sesión</span>
+          <span id="login-spinner" class="spinner" style="display:none;"></span>
+        </button>
+      </form>
+
+      <div style="margin-top: var(--sp-5); text-align: center;">
+        <a href="index.html" style="font-size: var(--text-sm); color: var(--color-muted);">
+          ← Volver a la tienda
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ADMIN APP (shown after auth) ========== -->
+  <div id="admin-app" style="display:none;" role="application" aria-label="Panel de administración">
+
+    <!-- Admin Header -->
+    <header id="admin-header">
+      <div class="admin-header-inner">
+        <div class="admin-logo-wrap">
+          <img src="assets/logo.jpg" alt="Logo" class="admin-logo" />
+          <span class="admin-title">Panel Admin</span>
+          <span class="admin-badge">Serpico</span>
+        </div>
+        <div class="admin-header-actions">
+          <a href="index.html" class="btn-secondary" aria-label="Ver tienda">
+            🏪 Ver Tienda
+          </a>
+          <button id="logout-btn" class="btn-secondary" aria-label="Cerrar sesión">
+            🚪 Salir
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Admin Nav Tabs -->
+    <nav id="admin-nav" aria-label="Secciones del panel">
+      <div class="admin-nav-inner">
+        <button class="nav-tab active" data-panel="products" id="nav-products">
+          📦 Productos
+        </button>
+        <button class="nav-tab" data-panel="banners" id="nav-banners">
+          📢 Banner
+        </button>
+      </div>
+    </nav>
+
+    <!-- Admin Content -->
+    <div id="admin-content">
+
+      <!-- ======== PRODUCTS PANEL ======== -->
+      <section class="admin-panel active" id="panel-products" aria-label="Gestión de productos">
+
+        <div class="panel-header">
+          <h2 class="panel-title">Productos <span>del Catálogo</span></h2>
+          <div class="admin-search-wrap">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              id="admin-product-search"
+              placeholder="Buscar producto..."
+              autocomplete="off"
+              aria-label="Buscar productos en el panel"
+            />
+          </div>
+          <button class="btn-primary" id="btn-new-product" style="width:auto; padding: var(--sp-2) var(--sp-5);" aria-label="Añadir nuevo producto">
+            ➕ Nuevo Producto
+          </button>
+        </div>
+
+        <!-- Product Form (Create / Edit) -->
+        <div id="product-form-card" aria-label="Formulario de producto">
+          <div class="form-card-header">
+            <h3 class="form-card-title" id="form-card-title">Nuevo Producto</h3>
+            <button class="btn-secondary" id="btn-cancel-form" aria-label="Cancelar formulario">
+              ✕ Cancelar
+            </button>
+          </div>
+
+          <form id="product-form" novalidate>
+            <input type="hidden" id="product-id" value="" />
+
+            <div class="form-grid">
+              <!-- Title -->
+              <div class="form-group full">
+                <label class="form-label" for="product-title">Título del producto *</label>
+                <input
+                  type="text"
+                  id="product-title"
+                  class="form-input"
+                  placeholder="Ej: Pastillas de freno KLX 150 originales"
+                  required
+                  maxlength="120"
+                />
+              </div>
+
+              <!-- Category -->
+              <div class="form-group">
+                <label class="form-label" for="product-category">Categoría *</label>
+                <select id="product-category" class="form-select" required>
+                  <option value="" disabled selected>Selecciona una categoría</option>
+                  <option value="kawasaki-victor">🏍️ Repuestos Kawasaki Victor</option>
+                  <option value="kawasaki-klx150">🏍️ Repuestos Kawasaki KLX 150</option>
+                </select>
+              </div>
+
+              <!-- Price (COP) -->
+              <div class="form-group">
+                <label class="form-label" for="product-price">Precio en pesos (COP)</label>
+                <div class="price-input-wrap">
+                  <span class="price-input-prefix">$</span>
+                  <input
+                    type="number"
+                    id="product-price"
+                    class="form-input price-input"
+                    placeholder="Ej: 145000"
+                    min="0"
+                    step="100"
+                    inputmode="numeric"
+                  />
+                  <span class="price-input-suffix">COP</span>
+                </div>
+                <small class="form-hint">
+                  Opcional. <span id="price-preview">Se verá: —</span>
+                </small>
+              </div>
+
+              <!-- Image Upload -->
+              <div class="form-group full">
+                <label class="form-label">Imagen del producto</label>
+                <div class="img-upload-area" id="img-upload-area" role="button" tabindex="0" aria-label="Subir imagen del producto">
+                  <input
+                    type="file"
+                    id="product-image-file"
+                    accept="image/*"
+                    aria-label="Seleccionar archivo de imagen"
+                  />
+                  <div class="img-upload-icon" id="upload-icon">📷</div>
+                  <p class="img-upload-text" id="upload-text">
+                    <strong>Haz clic</strong> o arrastra una imagen aquí<br />
+                    <small>JPG, PNG, WebP — Máx. 5MB</small>
+                  </p>
+                  <img id="img-preview" class="img-preview" src="" alt="Vista previa" />
+                  <div class="upload-progress" id="upload-progress">
+                    <div class="upload-progress-bar" id="upload-progress-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+                <!-- Current image URL (for editing) -->
+                <input
+                  type="text"
+                  id="product-image-url"
+                  class="form-input"
+                  placeholder="O pega una URL de imagen directamente"
+                  style="margin-top: var(--sp-2);"
+                />
+              </div>
+
+              <!-- Description -->
+              <div class="form-group full">
+                <label class="form-label" for="product-description">Descripción detallada</label>
+                <textarea
+                  id="product-description"
+                  class="form-textarea"
+                  placeholder="Describe el repuesto: compatibilidad, material, características técnicas, estado, etc. (opcional)"
+                  rows="4"
+                  maxlength="800"
+                ></textarea>
+                <small style="color: var(--color-muted); font-size: var(--text-xs); margin-top: var(--sp-1); display:block;">
+                  <span id="desc-chars">0</span>/800 caracteres
+                </small>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" id="btn-cancel-form-2">
+                Cancelar
+              </button>
+              <button type="submit" class="btn-primary" id="product-submit-btn" style="width:auto; padding: var(--sp-2) var(--sp-6);">
+                <span id="submit-btn-text">💾 Guardar Producto</span>
+                <span id="submit-spinner" class="spinner" style="display:none;"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Products List Table -->
+        <div id="products-table-wrap">
+          <div class="table-header">
+            <p class="table-count">
+              Mostrando <strong id="products-shown-count">0</strong> productos
+            </p>
+          </div>
+          <div id="products-list" role="list" aria-label="Lista de productos">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <span>Cargando productos...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== BANNER PANEL ======== -->
+      <section class="admin-panel" id="panel-banners" aria-label="Gestión del banner">
+        <div class="panel-header">
+          <h2 class="panel-title">Banner de <span>Anuncios</span></h2>
+        </div>
+
+        <!-- Banner Preview -->
+        <div class="banner-preview-box" id="banner-preview-box">
+          <p class="banner-preview-text" id="banner-preview-text">
+            Vista previa del banner aparecerá aquí...
+          </p>
+        </div>
+
+        <!-- Banner Form -->
+        <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--r-2xl); padding: var(--sp-6);">
+          <h3 style="font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--sp-5);">
+            Editar Banner
+          </h3>
+
+          <form id="banner-form" novalidate>
+            <input type="hidden" id="banner-id" value="" />
+
+            <div style="display: flex; flex-direction: column; gap: var(--sp-4);">
+              <div class="form-group">
+                <label class="form-label" for="banner-content">
+                  Texto del banner *
+                  <span style="color: var(--color-muted); font-weight: 400;">(soporta emojis)</span>
+                </label>
+                <textarea
+                  id="banner-content"
+                  class="form-textarea"
+                  placeholder="Ej: 🔥 ¡Ofertas especiales en pastillas de freno KLX 150! Contáctanos por WhatsApp."
+                  required
+                  rows="3"
+                  maxlength="300"
+                ></textarea>
+                <small style="color: var(--color-muted); font-size: var(--text-xs); margin-top: var(--sp-1); display:block;">
+                  <span id="banner-chars">0</span>/300 caracteres
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: var(--sp-2);">
+                  <input type="checkbox" id="banner-active" style="width: 18px; height: 18px; accent-color: var(--color-accent);" />
+                  Banner activo (visible en la tienda)
+                </label>
+              </div>
+
+              <div class="form-actions" style="padding-top: 0;">
+                <button type="submit" class="btn-primary" style="width: auto; padding: var(--sp-2) var(--sp-6);" id="banner-submit">
+                  <span id="banner-submit-text">💾 Guardar Banner</span>
+                  <span id="banner-spinner" class="spinner" style="display:none;"></span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Banner Info -->
+        <div style="margin-top: var(--sp-5); background: var(--color-accent-dim); border: 1px solid rgba(214,32,44,0.2); border-radius: var(--r-lg); padding: var(--sp-4);">
+          <p style="font-size: var(--text-sm); color: var(--color-accent); font-weight: 600; margin-bottom: var(--sp-2);">
+            💡 Consejos para el banner:
+          </p>
+          <ul style="font-size: var(--text-xs); color: var(--color-text-2); display: flex; flex-direction: column; gap: var(--sp-1); list-style: disc; padding-left: var(--sp-4);">
+            <li>Usa emojis para hacerlo más llamativo</li>
+            <li>Mantén el mensaje corto y directo</li>
+            <li>Incluye una llamada a la acción (ej: "¡Pídelo ya!")</li>
+            <li>Solo puede haber un banner activo a la vez</li>
+          </ul>
+        </div>
+      </section>
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-app -->
+
+  <!-- ========== CONFIRM DIALOG ========== -->
+  <div class="confirm-overlay" id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="confirm-card">
+      <div class="confirm-icon">🗑️</div>
+      <h3 class="confirm-title" id="confirm-title">¿Eliminar producto?</h3>
+      <p class="confirm-msg" id="confirm-msg">Esta acción no se puede deshacer. El producto será eliminado del catálogo.</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" id="confirm-cancel">Cancelar</button>
+        <button class="btn-danger" id="confirm-ok">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TOAST ========== -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/admin/demo-data.js"></script>
+  <script src="js/admin/auth.js"></script>
+  <script src="js/admin/products.js"></script>
+  <script src="js/admin/banners.js"></script>
+</body>
+</html>
